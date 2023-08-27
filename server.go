@@ -8,7 +8,7 @@ import (
 
 func homePage(w http.ResponseWriter, r *http.Request){
     fmt.Fprintf(w, "OK!")
-    fmt.Println("Endpoint Hit: homePage")
+    fmt.Println("Endpoint Hit: homePage1")
 }
 
 func handleRequests() {
