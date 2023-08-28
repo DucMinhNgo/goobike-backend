@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"adapter-module/adapter"
+	"adapter-pattern/adapter"
 )
 
 func main() {
