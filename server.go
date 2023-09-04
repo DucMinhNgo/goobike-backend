@@ -22,6 +22,14 @@ type TodoItem struct {
     UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
+type TodoItemCreation struct {
+    Title string `json:"title" gorm:"column:title"`
+    Description string `json:"description" gorm:"column:description"`
+    Status string `json:"status" gorm:"column:status"`
+}
+
+func (TodoItemCreation) TableName() string { return "todo_items" }
+
 func testTodoItem() {
     // UTC: lấy thời gian gốc (múi giờ)
     now := time.Now().UTC()
@@ -58,7 +66,7 @@ func main() {
     if err != nil {
         log.Fatalf("Error loading .env file")
     }
-    
+
     // refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
     dsn := os.Getenv("MYSQL_DATABASE_CONNECTION")
 
@@ -83,6 +91,25 @@ func main() {
 
     r := gin.Default()
 
+    // CRUD
+    // POST /v1/items (create new item)
+    // GET /v1/items?page=1 (list item)
+    // GET /v1/items/:id (get item detail by id)
+    // (PUT | PATCH) /v1/items/:id (update item by id)
+    // DELETE /v1/items/:id (delete item by id)
+    v1 := r.Group("/v1")
+    {
+        items := v1.Group("/items")
+        {
+            items.POST("", CreateItem(db))
+            items.GET("")
+            items.GET("/:id")
+            items.PUT("/:id")
+            items.DELETE("/:id")
+        }
+    }
+
+
     r.GET("/ping", func(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
         "message": item,
@@ -91,3 +118,29 @@ func main() {
 
     r.Run(":5000") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
+
+func CreateItem(db *gorm.DB) func(*gin.Context) {
+    return func(c *gin.Context) {
+        var data TodoItemCreation
+        if err := c.ShouldBind(&data); err != nil {
+           c.JSON(http.StatusBadRequest, gin.H{
+                "error": err.Error(),
+            })
+
+            return;
+        }
+
+        if err := db.Create(&data).Error; err != nil {
+            // internal server error
+            c.JSON(http.StatusBadRequest, gin.H{
+                "error": err.Error(),
+            })
+
+            return; 
+        }
+
+        c.JSON(http.StatusOK, gin.H{
+            "data": data,
+        }) 
+    }
+} 
