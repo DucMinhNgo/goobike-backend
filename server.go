@@ -6,6 +6,11 @@ import (
     "time"
     "encoding/json"
     "github.com/gin-gonic/gin"
+    "gorm.io/driver/mysql"
+    "gorm.io/gorm"
+    "log"
+    "github.com/joho/godotenv"
+    "os"
 )
 
 type TodoItem struct {
@@ -49,6 +54,22 @@ func testTodoItem() {
 }
 
 func main() {
+    err := godotenv.Load(".env")
+    if err != nil {
+        log.Fatalf("Error loading .env file")
+    }
+    
+    // refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
+    dsn := os.Getenv("MYSQL_DATABASE_CONNECTION")
+
+    db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+
+    if (err != nil) {
+        log.Fatal(err)
+    }
+
+    fmt.Println(db)
+
     now := time.Now().UTC()
 
     item := TodoItem{
