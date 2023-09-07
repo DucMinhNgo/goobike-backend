@@ -11,16 +11,19 @@ import (
     "log"
     "github.com/joho/godotenv"
     "os"
+    "strconv"
 )
 
 type TodoItem struct {
-    Id int `json:"id"`
-    Title string `json:"title"`
-    Description string `json:"description"`
-    Status string `json:"status"`
-    CreatedAt *time.Time `json:"created_at"`
-    UpdatedAt *time.Time `json:"updated_at,omitempty"`
+    Id int `json:"id" gorm:"column:id"`
+    Title string `json:"title" gorm:"column:title"`
+    Description string `json:"description" gorm:"column:description"`
+    Status string `json:"status" gorm:"column:status"`
+    CreatedAt *time.Time `json:"created_at" gorm:"column:created_at"`
+    UpdatedAt *time.Time `json:"updated_at,omitempty" gorm:"column:updated_at"`
 }
+
+func (TodoItem) TableName() string { return "todo_items" }
 
 type TodoItemCreation struct {
     Title string `json:"title" gorm:"column:title"`
@@ -29,6 +32,15 @@ type TodoItemCreation struct {
 }
 
 func (TodoItemCreation) TableName() string { return "todo_items" }
+
+// * string (khi truyền '' vẫn cập nhật)
+type TodoItemUpdate struct {
+    Title *string `json:"title" gorm:"column:title"`
+    Description *string `json:"description" gorm:"column:description"`
+    Status *string `json:"status" gorm:"column:status"`
+}
+
+func (TodoItemUpdate) TableName() string { return "todo_items" }
 
 func testTodoItem() {
     // UTC: lấy thời gian gốc (múi giờ)
@@ -102,10 +114,10 @@ func main() {
         items := v1.Group("/items")
         {
             items.POST("", CreateItem(db))
-            items.GET("")
-            items.GET("/:id")
-            items.PUT("/:id")
-            items.DELETE("/:id")
+            items.GET("", GetList(db))
+            items.GET("/:id", GetItem(db))
+            items.PUT("/:id", UpdateItem(db))
+            items.DELETE("/:id", DeleteItem(db))
         }
     }
 
@@ -144,3 +156,129 @@ func CreateItem(db *gorm.DB) func(*gin.Context) {
         }) 
     }
 } 
+
+func GetItem(db *gorm.DB) func (*gin.Context) {
+    return func(c *gin.Context) {
+        var data TodoItem;
+
+        id, err := strconv.Atoi(c.Param("id"))
+            if err != nil {
+            // internal server error
+            c.JSON(http.StatusBadRequest, gin.H{
+                "error": err.Error(),
+            })
+
+            return;  
+        }
+        data.Id = id
+
+        if err := db.First(&data).Error; err != nil {
+            if err != nil {
+                // internal server error
+                c.JSON(http.StatusBadRequest, gin.H{
+                    "error": err.Error(),
+                })
+    
+                return; 
+        }
+    }
+
+        c.JSON(http.StatusOK, gin.H{
+            "data": data,
+        })
+    }
+}
+
+func GetList(db *gorm.DB) func (*gin.Context) {
+    return func(c *gin.Context) {
+        var result []TodoItem;
+
+        if err := db.Find(&result).Error; err != nil {
+            if err != nil {
+                // internal server error
+                c.JSON(http.StatusBadRequest, gin.H{
+                    "error": err.Error(),
+                })
+    
+                return; 
+        }
+    }
+
+        c.JSON(http.StatusOK, gin.H{
+            "data": result,
+        })
+    }
+}
+
+func UpdateItem(db *gorm.DB) func (*gin.Context) {
+    return func(c *gin.Context) {
+        var data TodoItemUpdate;
+
+        id, err := strconv.Atoi(c.Param("id"))
+            if err != nil {
+            // internal server error
+            c.JSON(http.StatusBadRequest, gin.H{
+                "error": err.Error(),
+            })
+
+            return;  
+        }
+
+        if err := c.ShouldBind(&data); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{
+                 "error": err.Error(),
+             })
+ 
+             return;
+         }
+
+
+        if err := db.Where("id = ?", id).Updates(&data).Error; err != nil {
+            if err != nil {
+                // internal server error
+                c.JSON(http.StatusBadRequest, gin.H{
+                    "error": err.Error(),
+                })
+    
+                return;
+            }
+        }
+
+        c.JSON(http.StatusOK, gin.H{
+            "data": true,
+        })
+    }
+}
+
+func DeleteItem(db *gorm.DB) func (*gin.Context) {
+    return func(c *gin.Context) {
+        id, err := strconv.Atoi(c.Param("id"))
+            if err != nil {
+            // internal server error
+            c.JSON(http.StatusBadRequest, gin.H{
+                "error": err.Error(),
+            })
+
+            return;  
+        }
+        // hard delete
+        // if err := db.Table(TodoItem{}.TableName()).Where("id = ?", id).Delete(nil).Error; err != nil {
+        // soft delete
+        if err := db.Table(TodoItem{}.TableName()).Where("id = ?", id).Updates(map[string]interface{}{
+            "status": "Deleted",
+        }).Error; err != nil {
+            if err != nil {
+                // internal server error
+                c.JSON(http.StatusBadRequest, gin.H{
+                    "error": err.Error(),
+                })
+    
+                return; 
+        }
+    }
+
+        c.JSON(http.StatusOK, gin.H{
+            "data": true,
+        })
+    }
+}
