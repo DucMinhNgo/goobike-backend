@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"goobike-backend/common"
 	"log"
 	"net/http"
 	"os"
@@ -94,12 +95,11 @@ func (item *ItemStatus) UnmarshalJSON(data []byte) error {
 }
 
 type TodoItem struct {
-	Id          int        `json:"id" gorm:"column:id"`
+	// embeding Struct (khong phai ke thua)
+	common.SQLModel
 	Title       string     `json:"title" gorm:"column:title"`
 	Description string     `json:"description" gorm:"column:description"`
 	Status      ItemStatus `json:"status" gorm:"column:status"`
-	CreatedAt   *time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty" gorm:"column:updated_at"`
 }
 
 func (TodoItem) TableName() string { return "todo_items" }
@@ -231,9 +231,7 @@ func CreateItem(db *gorm.DB) func(*gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": data,
-		})
+		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
 	}
 }
 
@@ -263,15 +261,43 @@ func GetItem(db *gorm.DB) func(*gin.Context) {
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": data,
-		})
+		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
 	}
 }
 
 func GetList(db *gorm.DB) func(*gin.Context) {
 	return func(c *gin.Context) {
+		var paging common.Paging
+
+		if err := c.ShouldBind(&paging); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+
+			return
+		}
+
+		paging.Process()
+
 		var result []TodoItem
+
+		db = db.Where("status <> ?", "deleted")
+
+		if err := db.Table(TodoItem{}.TableName()).Count(&paging.Total).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+
+			return
+		}
+
+		if err := db.Order("id desc").Offset((paging.Page - 1) * paging.Limit).Limit(paging.Limit).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+
+			return
+		}
 
 		if err := db.Find(&result).Error; err != nil {
 			if err != nil {
@@ -284,9 +310,7 @@ func GetList(db *gorm.DB) func(*gin.Context) {
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": result,
-		})
+		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, nil))
 	}
 }
 
@@ -323,9 +347,7 @@ func UpdateItem(db *gorm.DB) func(*gin.Context) {
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": true,
-		})
+		c.JSON(http.StatusOK, common.SimpleSuccessResponse(true))
 	}
 }
 
@@ -356,8 +378,6 @@ func DeleteItem(db *gorm.DB) func(*gin.Context) {
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": true,
-		})
+		c.JSON(http.StatusOK, common.SimpleSuccessResponse(true))
 	}
 }
