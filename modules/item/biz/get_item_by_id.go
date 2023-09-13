@@ -6,16 +6,16 @@ import (
 )
 
 // interface to storage
-type GetItemItemStorage interface {
+type GetItemStorage interface {
 	GetItem(ctx context.Context, cond map[string]interface{}) (*model.TodoItem, error)
 }
 
 // business chir dungf interface ko biet storage dang dungf phuong phap gif de luu tru
 type getItemBiz struct {
-	store GetItemItemStorage
+	store GetItemStorage
 }
 
-func NewGetItemBiz(store GetItemItemStorage) *getItemBiz {
+func NewGetItemBiz(store GetItemStorage) *getItemBiz {
 	return &getItemBiz{store: store}
 }
 

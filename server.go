@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"goobike-backend/common"
-	"goobike-backend/modules/item/model"
 	ginitem "goobike-backend/modules/item/transport/gin"
 	"log"
 	"net/http"
@@ -87,7 +85,7 @@ func main() {
 		items := v1.Group("/items")
 		{
 			items.POST("", ginitem.CreateItem(db))
-			items.GET("", GetList(db))
+			items.GET("", ginitem.GetList(db))
 			items.GET("/:id", ginitem.GetItem(db))
 			items.PUT("/:id", ginitem.UpdateItem(db))
 			items.DELETE("/:id", ginitem.DeleteItem(db))
@@ -96,58 +94,9 @@ func main() {
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
+			"message": "OK",
 		})
 	})
 
 	r.Run(":5000") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-}
-
-func GetList(db *gorm.DB) func(*gin.Context) {
-	return func(c *gin.Context) {
-		var paging common.Paging
-
-		if err := c.ShouldBind(&paging); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-
-			return
-		}
-
-		paging.Process()
-
-		var result []model.TodoItem
-
-		db = db.Where("status <> ?", "deleted")
-
-		if err := db.Table(model.TodoItem{}.TableName()).Count(&paging.Total).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-
-			return
-		}
-
-		if err := db.Order("id desc").Offset((paging.Page - 1) * paging.Limit).Limit(paging.Limit).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-
-			return
-		}
-
-		if err := db.Find(&result).Error; err != nil {
-			if err != nil {
-				// internal server error
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-
-				return
-			}
-		}
-
-		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, nil))
-	}
 }
