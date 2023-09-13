@@ -90,7 +90,7 @@ func main() {
 			items.POST("", ginitem.CreateItem(db))
 			items.GET("", GetList(db))
 			items.GET("/:id", ginitem.GetItem(db))
-			items.PUT("/:id", UpdateItem(db))
+			items.PUT("/:id", ginitem.UpdateItem(db))
 			items.DELETE("/:id", DeleteItem(db))
 		}
 	}
@@ -150,43 +150,6 @@ func GetList(db *gorm.DB) func(*gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, nil))
-	}
-}
-
-func UpdateItem(db *gorm.DB) func(*gin.Context) {
-	return func(c *gin.Context) {
-		var data model.TodoItemUpdate
-
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			// internal server error
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-
-			return
-		}
-
-		if err := c.ShouldBind(&data); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-
-			return
-		}
-
-		if err := db.Where("id = ?", id).Updates(&data).Error; err != nil {
-			if err != nil {
-				// internal server error
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-
-				return
-			}
-		}
-
-		c.JSON(http.StatusOK, common.SimpleSuccessResponse(true))
 	}
 }
 
