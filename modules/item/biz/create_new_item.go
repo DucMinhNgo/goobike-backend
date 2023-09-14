@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"goobike-backend/common"
 	"goobike-backend/modules/item/model"
 	"strings"
 )
@@ -28,7 +29,7 @@ func (biz *createItemBiz) CreateNewItem(ctx context.Context, data *model.TodoIte
 	}
 
 	if err := biz.store.CreateItem(ctx, data); err != nil {
-		return err
+		return common.CannotCreateEntity(model.EntityName, err)
 	}
 
 	return nil

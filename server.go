@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"goobike-backend/common"
 	ginitem "goobike-backend/modules/item/transport/gin"
 	"log"
 	"net/http"
@@ -73,6 +74,9 @@ func main() {
 	// }
 
 	r := gin.Default()
+	// r.Use(middleware.Recovery())
+	// v1 := r.Group("/v1", middleware.Recovery())
+	// items.GET("", middleware.Recovery(), ginitem.GetList(db))
 
 	// CRUD
 	// POST /v1/items (create new item)
@@ -84,7 +88,6 @@ func main() {
 	{
 		items := v1.Group("/items")
 		{
-			items.POST("", ginitem.CreateItem(db))
 			items.GET("", ginitem.GetList(db))
 			items.GET("/:id", ginitem.GetItem(db))
 			items.PUT("/:id", ginitem.UpdateItem(db))
@@ -93,6 +96,9 @@ func main() {
 	}
 
 	r.GET("/ping", func(c *gin.Context) {
+		go func() {
+			defer common.Recovery()
+		}()
 		c.JSON(http.StatusOK, gin.H{
 			"message": "OK",
 		})

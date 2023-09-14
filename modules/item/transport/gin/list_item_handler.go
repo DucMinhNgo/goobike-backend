@@ -16,9 +16,7 @@ func GetList(db *gorm.DB) func(*gin.Context) {
 		var paging common.Paging
 
 		if err := c.ShouldBind(&paging); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
+			c.JSON(http.StatusBadRequest, common.ErrInvalidRequest((err)))
 
 			return
 		}
@@ -27,9 +25,7 @@ func GetList(db *gorm.DB) func(*gin.Context) {
 		var filter model.Filter
 
 		if err := c.ShouldBind(&filter); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
+			c.JSON(http.StatusBadRequest, common.ErrInvalidRequest((err)))
 
 			return
 		}
@@ -40,9 +36,7 @@ func GetList(db *gorm.DB) func(*gin.Context) {
 		result, err := business.ListItem(c.Request.Context(), &filter, &paging)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
+			c.JSON(http.StatusBadRequest, err)
 		}
 
 		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, nil))
