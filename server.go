@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"goobike-backend/common"
+	"goobike-backend/middleware"
 	ginitem "goobike-backend/modules/item/transport/gin"
 	ginuser "goobike-backend/modules/user/transport/gin"
 	"log"
@@ -273,7 +274,7 @@ func main() {
 	// DELETE /v1/items/:id (delete item by id)
 	v1 := r.Group("/v1")
 	{
-		items := v1.Group("/items")
+		items := v1.Group("/items", middleware.Auth())
 		{
 			items.GET("", ginitem.GetList(db))
 			items.GET("/:id", ginitem.GetItem(db))
