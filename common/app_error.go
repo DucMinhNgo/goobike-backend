@@ -74,6 +74,10 @@ func ErrInvalidRequest(err error) *AppError {
 	return NewErrorResponse(err, "invalid request", err.Error(), "ErrInvalidRequest")
 }
 
+func ErrInvalidPassword(err error) *AppError {
+	return NewErrorResponse(err, "invalid password", err.Error(), "ErrInvalidPassword")
+}
+
 func ErrorInternal(err error) *AppError {
 	return NewFullErrorResponse(http.StatusInternalServerError, err, "somethng went wrong in the server", err.Error(), "ErrInternal")
 }

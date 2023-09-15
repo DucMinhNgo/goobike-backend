@@ -8,6 +8,17 @@ CREATE TABLE todo_items (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY, -- Cột này có thể sử dụng auto-increment nếu bạn muốn có một trường ID duy nhất cho mỗi người dùng
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
 -- Set Index (Tìm kiếm thứ cấp)
 -- Thay đổi dữ liệu cập nhật Index
 ALTER TABLE todo_items
