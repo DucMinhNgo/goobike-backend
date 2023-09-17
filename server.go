@@ -278,6 +278,7 @@ func main() {
 		{
 			items.GET("", ginitem.GetList(db))
 			items.GET("/:id", ginitem.GetItem(db))
+			items.POST("", ginitem.CreateItem(db))
 			items.PUT("/:id", ginitem.UpdateItem(db))
 			items.DELETE("/:id", ginitem.DeleteItem(db))
 		}
