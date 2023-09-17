@@ -14,30 +14,30 @@ services:
       - mysql:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
   
-  postgres:
-    image: postgres:14.1-alpine
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - '5433:5432'
-    volumes: 
-      - postgres:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:14.1-alpine
+  #   restart: always
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #   ports:
+  #     - '5433:5432'
+  #   volumes: 
+  #     - postgres:/var/lib/postgresql/data
   
-  firebase-emulator:
-    image: firebase/emulator
-    ports:
-      - "9098:9099" # Firebase Auth
-      - "5001:5000" # Firestore
-      - "8081:8080" # Firebase Realtime Database
-    environment:
-      - FIRESTORE_EMULATOR_HOST=firebase-emulator:5000
-      - FIREBASE_AUTH_EMULATOR_HOST=firebase-emulator:9099
-      - FIREBASE_DATABASE_EMULATOR_HOST=firebase-emulator:8080
+  # firebase-emulator:
+  #   image: firebase/emulator
+  #   ports:
+  #     - "9098:9099" # Firebase Auth
+  #     - "5001:5000" # Firestore
+  #     - "8081:8080" # Firebase Realtime Database
+  #   environment:
+  #     - FIRESTORE_EMULATOR_HOST=firebase-emulator:5000
+  #     - FIREBASE_AUTH_EMULATOR_HOST=firebase-emulator:9099
+  #     - FIREBASE_DATABASE_EMULATOR_HOST=firebase-emulator:8080
 
 volumes:
   mysql:
     driver: local
-  postgres:
-    driver: local
+  # postgres:
+  #   driver: local
