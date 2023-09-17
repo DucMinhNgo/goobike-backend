@@ -297,5 +297,5 @@ func main() {
 		})
 	})
 
-	r.Run(":5001") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(":80") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
