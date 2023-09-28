@@ -290,6 +290,7 @@ func main() {
 	}
 
 	r.GET("/ping", func(c *gin.Context) {
+		log.Println("Received GET request")
 		go func() {
 			defer common.Recovery()
 		}()
