@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"goobike-backend/common"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"time"
 
+	"cloud.google.com/go/logging"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
@@ -234,6 +236,29 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Logging
+	ctx := context.Background()
+
+	// Sets your Google Cloud Platform project ID.
+	projectID := "nimble-radio-399803"
+
+	// Creates a client.
+	client, errLog := logging.NewClient(ctx, projectID)
+	if errLog != nil {
+		log.Fatalf("Failed to create client: %v", errLog)
+	}
+	defer client.Close()
+
+	// Sets the name of the log to write to.
+	logName := "my-log"
+
+	logger := client.Logger(logName).StandardLogger(logging.Info)
+
+	// Logs "hello world", log entry is visible at
+	// Cloud Logs.
+	logger.Println("hello world")
+	// End Logging
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -291,6 +316,7 @@ func main() {
 
 	r.GET("/ping", func(c *gin.Context) {
 		log.Println("Received GET request")
+		logger.Println("Received GET request")
 		go func() {
 			defer common.Recovery()
 		}()
